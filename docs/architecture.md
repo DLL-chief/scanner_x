@@ -1,15 +1,7 @@
-# Документация проекта Card Recognition App
+## Обновления (Pure Frontend)
 
-## Созданные файлы (обновлено: 2026-06-19)
-- `README.md` (root): Краткое описание проекта.
-- `package.json`: Настроен для Vite + React TS + Transformers.js + idb.
+- clip.worker.ts: реализован с Transformers.js + WebGPU/Web Worker.
+- useClipWorker: улучшен для live vectorize.
+- Live detection loop в RecognizePage готов к интеграции.
 
-## Созданные файлы
-- `README.md` (root)
-- `package.json`
-- `vite.config.ts` (поддержка workers, TS, React)
-
-## Следующие шаги
-- tailwind.config.js + postcss
-- tsconfig.json
-- src/main.tsx + App.tsx
+Следующие: UX polish + full live loop.

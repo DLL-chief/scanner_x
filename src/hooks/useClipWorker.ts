@@ -1,52 +1,48 @@
-// src/hooks/useClipWorker.ts
-
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-export interface WorkerMessage {
-  type: 'status' | 'ready' | 'result' | 'error';
+export interface WorkerResult {
+  embedding?: number[];
+  timeMs?: number;
   status?: string;
   progress?: number;
   device?: string;
-  embedding?: number[];
-  timeMs?: number;
   error?: string;
 }
 
-export const useClipWorker = () => {
+export function useClipWorker() {
   const workerRef = useRef<Worker | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [device, setDevice] = useState<'webgpu' | 'wasm' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [device, setDevice] = useState<'webgpu' | 'wasm' | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Create worker
-    const worker = new Worker(new URL('../ml/clip.worker.ts', import.meta.url), {
-      type: 'module'
-    });
+  const initWorker = useCallback(() => {
+    if (workerRef.current) return;
+
+    const worker = new Worker(new URL('../ml/clip.worker.ts', import.meta.url), { type: 'module' });
     workerRef.current = worker;
 
-    worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
-      const msg = event.data;
+    worker.onmessage = (event: MessageEvent) => {
+      const data = event.data as WorkerResult;
 
-      if (msg.type === 'status') {
-        console.log('Worker status:', msg);
-      } else if (msg.type === 'ready') {
+      if (data.type === 'status') {
+        setIsLoading(true);
+        setProgress(data.progress || 0);
+      } else if (data.type === 'ready') {
         setIsReady(true);
-        setDevice(msg.device as 'webgpu' | 'wasm');
         setIsLoading(false);
-      } else if (msg.type === 'result') {
-        // Handle result in calling component
-      } else if (msg.type === 'error') {
-        console.error('Worker error:', msg.error);
+        setDevice(data.device as 'webgpu' | 'wasm');
+        setProgress(100);
+      } else if (data.type === 'result') {
+        setIsLoading(false);
+      } else if (data.type === 'error') {
+        setError(data.error || 'Unknown error');
+        setIsLoading(false);
       }
     };
 
-    // Init worker
     worker.postMessage({ type: 'init' });
-
-    return () => {
-      worker.terminate();
-    };
   }, []);
 
   const vectorize = useCallback((imageData: ImageData): Promise<number[]> => {
@@ -56,14 +52,14 @@ export const useClipWorker = () => {
         return;
       }
 
-      const handler = (event: MessageEvent<WorkerMessage>) => {
-        const msg = event.data;
-        if (msg.type === 'result' && msg.embedding) {
+      const handler = (event: MessageEvent) => {
+        const data = event.data;
+        if (data.type === 'result') {
           workerRef.current!.removeEventListener('message', handler);
-          resolve(msg.embedding);
-        } else if (msg.type === 'error') {
+          resolve(data.embedding);
+        } else if (data.type === 'error') {
           workerRef.current!.removeEventListener('message', handler);
-          reject(new Error(msg.error));
+          reject(new Error(data.error));
         }
       };
 
@@ -72,5 +68,12 @@ export const useClipWorker = () => {
     });
   }, []);
 
-  return { isReady, device, isLoading, vectorize };
-};
+  useEffect(() => {
+    initWorker();
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, [initWorker]);
+
+  return { isReady, isLoading, progress, device, error, vectorize, initWorker };
+}
