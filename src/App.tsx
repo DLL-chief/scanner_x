@@ -1,27 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { StorageService } from './db/storage';
-import { useClipWorker } from './hooks/useClipWorker';
+import React, { useState } from 'react';
+import AdminPage from './pages/AdminPage';
+import RecognizePage from './pages/RecognizePage';
 import './index.css';
 
-// Simple Card type for UI
 function App() {
   const [mode, setMode] = useState<'admin' | 'recognize'>('recognize');
-  const [cards, setCards] = useState<any[]>([]);
-  const { worker, isReady, status, vectorize } = useClipWorker();
-
-  // Load cards
-  useEffect(() => {
-    const loadCards = async () => {
-      const allCards = await StorageService.getAllCards();
-      setCards(allCards);
-    };
-    loadCards();
-  }, []);
-
-  const handleVectorize = async () => {
-    // Example placeholder
-    console.log('Vectorize called');
-  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -46,20 +29,7 @@ function App() {
       </nav>
 
       <main className="max-w-4xl mx-auto p-4">
-        {mode === 'recognize' ? (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Распознавание карточки</h2>
-            <p>Интеграция worker: {isReady ? 'Готов' : 'Загрузка...'}</p>
-            <p>Статус: {status}</p>
-            {/* Camera and recognition UI will be added later */}
-          </div>
-        ) : (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Админ панель</h2>
-            <p>Сохранено карточек: {cards.length}</p>
-            {/* Admin UI will be added later */}
-          </div>
-        )}
+        {mode === 'recognize' ? <RecognizePage /> : <AdminPage />}
       </main>
     </div>
   );
