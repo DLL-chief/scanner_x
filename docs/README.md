@@ -1,5 +1,10 @@
-# Documentation
+# Документация проекта scanner_x (Pure Frontend)
 
-- Updated: clip.worker.ts, useClipWorker, pages integration, live loop ready.
+## Последние обновления:
+- Доработан ImageCropper.tsx + storage integration в AdminPage
+- Полный live-loop + debounce в RecognizePage
+- Стили/анимации + deploy optimizations (vite.config)
 
-Файлы добавлены и отмечены.
+Все файлы отмечены в READMEs. Проект готов к тестированию.
+
+Залито: https://github.com/DLL-chief/scanner_x
