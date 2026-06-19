@@ -1,11 +1,9 @@
-# Документация Scanner X
+# Documentation
 
-## Созданные файлы
-- `index.html`
-- `src/main.tsx`
-- `src/App.tsx` (базовый переключатель режимов)
-- `src/index.css`
+## Files created:
 
-Проект следует архитектуре Pure Frontend. Далее: ML Worker, DB, Components.
+- src/db/storage.ts: IndexedDB service
+- src/ml/clip.worker.ts: CLIP Web Worker
+- src/hooks/useClipWorker.ts: Hook for worker communication
 
-См. [Архитектура](./Архитектура (Pure Frontend).md)
+See Архитектура (Pure Frontend).md for details.
