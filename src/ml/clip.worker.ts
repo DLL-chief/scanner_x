@@ -1,57 +1,55 @@
 // src/ml/clip.worker.ts
-// Web Worker for CLIP model inference using @huggingface/transformers
+// Real Transformers.js CLIP Worker for Pure Frontend
 
-declare const self: DedicatedWorkerGlobalScope;
+import { pipeline, env } from '@xenova/transformers';
 
-import { pipeline, env } from '@huggingface/transformers';
-
-// Disable local models for browser
+// Configure for browser
 env.allowLocalModels = false;
+env.allowRemoteModels = true;
 
 let extractor: any = null;
+let isReady = false;
 
 self.onmessage = async (event: MessageEvent) => {
-  const { type, imageData, ...data } = event.data;
+  const { type, imageData, device = 'webgpu' } = event.data;
 
   if (type === 'init') {
     try {
       self.postMessage({ type: 'status', status: 'loading', progress: 0 });
-      
+
+      // Load CLIP image feature extractor
       extractor = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32', {
-        device: 'webgpu', // or 'wasm'
+        device,
         dtype: 'fp32',
-        quantized: false,
+        quantized: true,
+        progress_callback: (progress) => {
+          self.postMessage({ type: 'status', status: 'loading', progress: Math.round(progress.progress || 50) });
+        }
       });
-      
-      self.postMessage({ type: 'ready', device: 'webgpu' });
+
+      isReady = true;
+      self.postMessage({ type: 'ready', device });
     } catch (error) {
-      // Fallback to wasm
-      try {
-        extractor = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32', {
-          device: 'wasm',
-        });
-        self.postMessage({ type: 'ready', device: 'wasm' });
-      } catch (e) {
-        self.postMessage({ type: 'error', error: (e as Error).message });
-      }
+      self.postMessage({ type: 'error', error: (error as Error).message });
     }
-  } 
-  
-  else if (type === 'vectorize' && imageData) {
-    if (!extractor) {
-      self.postMessage({ type: 'error', error: 'Model not initialized' });
+  } else if (type === 'vectorize') {
+    if (!extractor || !isReady) {
+      self.postMessage({ type: 'error', error: 'Model not ready' });
       return;
     }
 
     try {
       const start = performance.now();
-      
-      // Process ImageData to tensor
-      const result = await extractor(imageData, { pooling: 'mean', normalize: true });
-      const embedding = Array.from(result.data);
-      
+
+      // For ImageData or Blob URL / canvas
+      const output = await extractor(imageData, {
+        pooling: 'mean',
+        normalize: true,
+      });
+
+      const embedding = Array.from(output.data);
+
       const timeMs = performance.now() - start;
-      
       self.postMessage({ 
         type: 'result', 
         embedding, 
