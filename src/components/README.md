@@ -1,6 +1,9 @@
-## Components (Pure Frontend)
+# src/components/
 
-- CameraCapture.tsx: Live camera + frame overlay + capture to Blob/ImageData.
-- ImageCropper.tsx: Canvas crop for admin.
+## Контракты и особенности:
+- **CameraCapture.tsx**: `onCapture(blob: Blob, imageData: ImageData)` — live camera with overlay frame for consistent cropping.
+- **ImageCropper.tsx**: Принимает Blob, canvas crop (center + fixed aspect), возвращает cropped Blob + ImageData.
 
-All use Canvas for ImageData → Worker.
+Mobile-first, Tailwind, Canvas-based для vectorization.
+
+Обновлено: добавлен ImageCropper.
