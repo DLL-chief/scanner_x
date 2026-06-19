@@ -1,12 +1,21 @@
 # scanner_x
 
-Чистое frontend-приложение для визуального распознавания карточек (serverless, 100% в браузере).
+**Чистое frontend-приложение для визуального распознавания карточек (100% serverless, в браузере).**
 
 ## Особенности
-- React + Vite + Tailwind
-- CLIP (Transformers.js) в Web Worker (WebGPU/WASM)
-- IndexedDB + KNN поиск
-- Админка и режим распознавания
+- React + Vite + TypeScript + Tailwind CSS
+- CLIP модель через @huggingface/transformers.js (Web Worker, WebGPU)
+- Локальное хранение в IndexedDB + KNN-поиск
+- Режимы: Админка (добавление эталонов) и Распознавание
 
 ## Структура
-См. docs/ и src/
+- `src/` - основной код
+- `docs/` - документация
+
+## Запуск
+```bash
+npm install
+npm run dev
+```
+
+**Создано:** index.html, src/main.tsx, src/App.tsx, src/index.css. Базовый UI готов.
