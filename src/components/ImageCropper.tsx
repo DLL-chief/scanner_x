@@ -8,7 +8,7 @@ interface ImageCropperProps {
 export const ImageCropper: React.FC<ImageCropperProps> = ({ imageBlob, onCropped }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isCropping, setIsCropping] = useState(false);
+  const [isCropping, setIsCropping] = useState(false); // kept for future drag-crop
 
   useEffect(() => {
     if (imageBlob) {
