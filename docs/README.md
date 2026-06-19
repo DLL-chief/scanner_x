@@ -1,10 +1,13 @@
-# Документация проекта scanner_x (Pure Frontend)
+# Документация проекта scanner_x
 
-## Последние обновления:
-- Доработан ImageCropper.tsx + storage integration в AdminPage
-- Полный live-loop + debounce в RecognizePage
-- Стили/анимации + deploy optimizations (vite.config)
+## Обзор
+Pure Frontend приложение для распознавания карточек с использованием CLIP в браузере.
 
-Все файлы отмечены в READMEs. Проект готов к тестированию.
+## Файлы и структура
+- docs/architecture.md - архитектура
+- src/ - исходники
 
-Залито: https://github.com/DLL-chief/scanner_x
+## Последние изменения
+- 19.06.2026: Фиксы по тестированию (storage, AdminPage, RecognizePage, worker import, KNN)
+
+Разработка файл за файлом.
