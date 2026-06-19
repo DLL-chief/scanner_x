@@ -1,7 +1,7 @@
 // src/ml/clip.worker.ts
 // Real Transformers.js CLIP Worker for Pure Frontend
 
-import { pipeline, env } from '@huggingface/transformers';
+import { pipeline, env } from '@xenova/transformers';
 
 // Configure for browser
 env.allowLocalModels = false;
@@ -21,9 +21,10 @@ self.onmessage = async (event: MessageEvent) => {
       extractor = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32', {
         device,
         dtype: 'fp32',
-        quantized: true,
-        progress_callback: (progress) => {
-          self.postMessage({ type: 'status', status: 'loading', progress: Math.round(progress.progress || 50) });
+        // quantized: true, // Removed - may not be supported in current API
+        progress_callback: (progressInfo: any) => {
+          const progress = typeof progressInfo === 'object' && progressInfo.progress ? progressInfo.progress : 50;
+          self.postMessage({ type: 'status', status: 'loading', progress: Math.round(progress) });
         }
       });
 
@@ -41,7 +42,7 @@ self.onmessage = async (event: MessageEvent) => {
     try {
       const start = performance.now();
 
-      // For ImageData
+      // For ImageData or Blob URL / canvas
       const output = await extractor(imageData, {
         pooling: 'mean',
         normalize: true,
