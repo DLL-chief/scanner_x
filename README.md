@@ -1,13 +1,11 @@
-# scanner_x
+# Scanner X
 
-Pure Frontend Card Recognition App (Serverless, CLIP in browser).
+Визуальное распознавание карточек (100% frontend прототип по архитектуре).
 
-## Structure
-- Pure React + Vite SPA
-- Client-side ML with Transformers.js + WebGPU
-- IndexedDB storage
+## Структура
+- `src/ml/knn.ts` — cosine similarity + KNN search
+- `src/App.tsx` — интегрировано Storage + ClipWorker
 
-Deployed as static site.
+Дальше: компоненты Camera, Cropper и т.д.
 
-## Next
-Continue with KNN and UI components.
+Проверьте `docs/` для архитектуры.
