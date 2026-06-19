@@ -5,5 +5,15 @@ export default defineConfig({
   plugins: [react()],
   worker: {
     format: 'es'
+  },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          transformers: ['@xenova/transformers']
+        }
+      }
+    }
   }
 })
