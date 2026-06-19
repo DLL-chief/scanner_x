@@ -1,7 +1,7 @@
 // src/ml/clip.worker.ts
 // Real Transformers.js CLIP Worker for Pure Frontend
 
-import { pipeline, env } from '@xenova/transformers';
+import { pipeline, env } from '@huggingface/transformers';
 
 // Configure for browser
 env.allowLocalModels = false;
@@ -41,7 +41,7 @@ self.onmessage = async (event: MessageEvent) => {
     try {
       const start = performance.now();
 
-      // For ImageData or Blob URL / canvas
+      // For ImageData
       const output = await extractor(imageData, {
         pooling: 'mean',
         normalize: true,
