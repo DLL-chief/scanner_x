@@ -24,10 +24,10 @@ export function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-export async function findTop5(
+export function findTop5(
   targetEmbedding: number[],
   cards: Card[]
-): Promise<Array<{ card: Card; similarity: number }>> {
+): Array<{ card: Card; similarity: number }> {
   const results = cards.map(card => ({
     card,
     similarity: cosineSimilarity(targetEmbedding, card.embedding)
