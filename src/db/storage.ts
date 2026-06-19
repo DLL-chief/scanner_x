@@ -50,6 +50,12 @@ class StorageService {
     return cards.map(({ embedding, ...rest }) => rest);
   }
 
+  // Added for RecognizePage
+  async getAllCardsWithEmbeddings(): Promise<Card[]> {
+    const db = await this.dbPromise;
+    return db.getAll('cards');
+  }
+
   async getCard(id: string): Promise<Card | undefined> {
     const db = await this.dbPromise;
     return db.get('cards', id);
