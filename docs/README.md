@@ -1,8 +1,5 @@
-# Документация проекта Scanner X
+# Documentation
 
-## Обновления
-- ✅ Добавлен `src/pages/README.md`, `AdminPage.tsx`, `RecognizePage.tsx`
-- ✅ Обновлён `src/App.tsx` для простого роутинга между страницами
-- ✅ Интеграция с существующими StorageService и useClipWorker (placeholders для camera/cropper)
+- Updated: clip.worker.ts, useClipWorker, pages integration, live loop ready.
 
-Следующий шаг: создание components/ (CameraCapture, ImageCropper) и улучшение vectorization.
+Файлы добавлены и отмечены.
