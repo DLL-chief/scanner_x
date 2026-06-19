@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useClipWorker } from '../hooks/useClipWorker';
 import { storageService } from '../db/storage';
 import { ImageCropper } from '../components/ImageCropper';
@@ -17,10 +17,11 @@ export default function AdminPage() {
     setCards(all);
   };
 
-  React.useEffect(() => { loadCards(); }, []);
+  useEffect(() => { loadCards(); }, []);
 
-  const handleCapture = (blob: Blob) => {
+  const handleCapture = (blob: Blob, imageData?: ImageData) => {
     setImageBlob(blob);
+    // imageData can be passed if needed for direct save
   };
 
   const handleCropped = async (croppedBlob: Blob, imageData: ImageData) => {
@@ -33,10 +34,12 @@ export default function AdminPage() {
       await storageService.addCard({ imageData: croppedBlob, url, description, embedding });
       setMessage('Карточка сохранена!');
       setImageBlob(null);
-      setUrl(''); setDescription('');
+      setUrl(''); 
+      setDescription('');
       loadCards();
     } catch (e) {
-      setMessage('Ошибка сохранения');
+      console.error(e);
+      setMessage('Ошибка сохранения: ' + (e as Error).message);
     }
   };
 
@@ -73,9 +76,7 @@ export default function AdminPage() {
           maxLength={500}
           className="w-full p-3 border rounded h-24"
         />
-        <button onClick={() => {}} disabled={!imageBlob} className="bg-green-600 text-white px-6 py-3 rounded w-full">
-          Сохранить
-        </button>
+        {/* Save button can be removed or used for other logic, crop handles save */}
       </div>
 
       {message && <div className="p-3 bg-green-100 rounded">{message}</div>}
