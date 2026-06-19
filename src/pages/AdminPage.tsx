@@ -21,7 +21,6 @@ export default function AdminPage() {
 
   const handleCapture = (blob: Blob, imageData?: ImageData) => {
     setImageBlob(blob);
-    // imageData can be passed if needed for direct save
   };
 
   const handleCropped = async (croppedBlob: Blob, imageData: ImageData) => {
@@ -34,12 +33,10 @@ export default function AdminPage() {
       await storageService.addCard({ imageData: croppedBlob, url, description, embedding });
       setMessage('Карточка сохранена!');
       setImageBlob(null);
-      setUrl(''); 
-      setDescription('');
+      setUrl(''); setDescription('');
       loadCards();
     } catch (e) {
-      console.error(e);
-      setMessage('Ошибка сохранения: ' + (e as Error).message);
+      setMessage('Ошибка сохранения');
     }
   };
 
@@ -76,7 +73,9 @@ export default function AdminPage() {
           maxLength={500}
           className="w-full p-3 border rounded h-24"
         />
-        {/* Save button can be removed or used for other logic, crop handles save */}
+        <button onClick={() => {}} disabled={!imageBlob} className="bg-green-600 text-white px-6 py-3 rounded w-full">
+          Сохранить
+        </button>
       </div>
 
       {message && <div className="p-3 bg-green-100 rounded">{message}</div>}
