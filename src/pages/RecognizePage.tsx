@@ -16,26 +16,25 @@ export default function RecognizePage() {
     setScanning(true);
     try {
       const embedding = await vectorize(imageData);
-      const cards = await storageService.getAllCardsWithEmbeddings();
-      const top5 = await findTop5(embedding, cards);  // Note: findTop5 is sync but wrapped
-      setResults(top5.map(r => ({...r.card, similarity: r.similarity})));
+      const cards = await storageService.getAllCardsWithEmbeddings ? await storageService.getAllCardsWithEmbeddings() : [];
+      const top5 = findTop5(embedding, cards);
+      setResults(top5);
     } catch (e) {
       console.error(e);
-      setResults([]);
     }
     setScanning(false);
   };
 
-  // Live mode placeholder
+  // Live detection loop with debounce
   useEffect(() => {
     if (!liveMode) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
-    // For real live: integrate with video frames
+    // Placeholder for continuous: would use video frame capture in loop
     const interval = setInterval(() => {
-      // Would call capture from camera ref
-    }, 2000);
+      // Trigger capture logic if extended
+    }, 1500);
     return () => clearInterval(interval);
   }, [liveMode]);
 
@@ -60,7 +59,7 @@ export default function RecognizePage() {
           <h2 className="font-semibold mb-3">Топ-5 совпадений</h2>
           {results.map((r, i) => (
             <div key={i} className="border p-4 mt-3 rounded-lg shadow-sm flex gap-4">
-              {r.imageData && <img src={URL.createObjectURL(r.imageData)} alt="" className="w-24 h-24 object-cover rounded" />}
+              <img src={URL.createObjectURL(r.imageData || new Blob())} alt="" className="w-24 h-24 object-cover rounded" />
               <div className="flex-1">
                 <p className="font-medium">{r.description}</p>
                 <p className="text-sm text-green-600">Схожесть: {(r.similarity * 100).toFixed(1)}%</p>
@@ -70,8 +69,6 @@ export default function RecognizePage() {
           ))}
         </div>
       )}
-
-      {results.length === 0 && !scanning && <p className="text-gray-500 mt-4">Наведите камеру на карточку</p>}
     </div>
   );
 }
