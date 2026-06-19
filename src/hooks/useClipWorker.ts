@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 export interface WorkerResult {
+  type?: string;
   embedding?: number[];
   timeMs?: number;
   status?: string;
@@ -53,10 +54,10 @@ export function useClipWorker() {
       }
 
       const handler = (event: MessageEvent) => {
-        const data = event.data;
+        const data = event.data as WorkerResult;
         if (data.type === 'result') {
           workerRef.current!.removeEventListener('message', handler);
-          resolve(data.embedding);
+          resolve(data.embedding || []);
         } else if (data.type === 'error') {
           workerRef.current!.removeEventListener('message', handler);
           reject(new Error(data.error));
