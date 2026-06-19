@@ -1,5 +1,10 @@
 /// <reference lib="webworker" />
 
+declare module '@xenova/transformers' {
+  export function pipeline(task: string, model: string, options?: any): Promise<any>;
+  export const env: any;
+}
+
 import { pipeline, env } from '@xenova/transformers';
 
 // Worker environment setup
