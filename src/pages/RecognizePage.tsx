@@ -16,9 +16,10 @@ export default function RecognizePage() {
     setScanning(true);
     try {
       const embedding = await vectorize(imageData);
-      const cards = await storageService.getAllCardsWithEmbeddings ? await storageService.getAllCardsWithEmbeddings() : [];
+      const cards = await storageService.getAllCardsWithEmbeddings();
       const top5 = findTop5(embedding, cards);
-      setResults(top5);
+      // findTop5 returns { card, similarity }; разворачиваем в плоский объект для рендера
+      setResults(top5.map(({ card, similarity }) => ({ ...card, similarity })));
     } catch (e) {
       console.error(e);
     }
