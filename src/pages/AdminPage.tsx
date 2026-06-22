@@ -7,8 +7,11 @@ import { CameraCapture } from '../components/CameraCapture';
 export default function AdminPage() {
   const { vectorize, isReady, progress, device } = useClipWorker();
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
+  const [croppedImageData, setCroppedImageData] = useState<ImageData | null>(null);
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [saving, setSaving] = useState(false);
   const [cards, setCards] = useState<any[]>([]);
   const [message, setMessage] = useState('');
 
@@ -19,24 +22,46 @@ export default function AdminPage() {
 
   useEffect(() => { loadCards(); }, []);
 
-  const handleCapture = (blob: Blob, imageData?: ImageData) => {
+  const handleCapture = (blob: Blob, _imageData?: ImageData) => {
     setImageBlob(blob);
+    setCroppedBlob(null);
+    setCroppedImageData(null);
   };
 
-  const handleCropped = async (croppedBlob: Blob, imageData: ImageData) => {
+  // Кроп только готовит изображение, не сохраняет
+  const handleCropped = (cropped: Blob, imageData: ImageData) => {
+    setCroppedBlob(cropped);
+    setCroppedImageData(imageData);
+    setMessage('Кадр обрезан. Заполните URL и описание, затем «Сохранить».');
+  };
+
+  const handleSave = async () => {
+    if (!croppedBlob || !croppedImageData) {
+      setMessage('Сначала сделайте фото и обрежьте кадр');
+      return;
+    }
     if (!url || !description) {
       setMessage('Заполните URL и описание');
       return;
     }
+    if (!isReady) {
+      setMessage('Модель ещё загружается, подождите');
+      return;
+    }
+    setSaving(true);
     try {
-      const embedding = await vectorize(imageData);
+      const embedding = await vectorize(croppedImageData);
       await storageService.addCard({ imageData: croppedBlob, url, description, embedding });
       setMessage('Карточка сохранена!');
       setImageBlob(null);
+      setCroppedBlob(null);
+      setCroppedImageData(null);
       setUrl(''); setDescription('');
       loadCards();
     } catch (e) {
       setMessage('Ошибка сохранения');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -73,8 +98,8 @@ export default function AdminPage() {
           maxLength={500}
           className="w-full p-3 border rounded h-24"
         />
-        <button onClick={() => {}} disabled={!imageBlob} className="bg-green-600 text-white px-6 py-3 rounded w-full">
-          Сохранить
+        <button onClick={handleSave} disabled={!croppedBlob || saving} className="bg-green-600 text-white px-6 py-3 rounded w-full disabled:opacity-50">
+          {saving ? 'Сохранение…' : 'Сохранить'}
         </button>
       </div>
 
