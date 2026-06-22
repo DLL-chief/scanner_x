@@ -1,11 +1,5 @@
 /// <reference lib="webworker" />
 
-declare module '@xenova/transformers' {
-  const pipeline: any;
-  const env: any;
-  export { pipeline, env };
-}
-
 import { pipeline, env } from '@xenova/transformers';
 
 env.allowLocalModels = false;
@@ -31,7 +25,9 @@ self.onmessage = async (event) => {
         }
       });
       
-      self.postMessage({ type: 'ready', device: 'webgpu' });
+      // Transformers.js v2 исполняет CLIP на WASM (ONNX Runtime Web), не на WebGPU.
+      // Для реального WebGPU нужен переход на @huggingface/transformers v3.
+      self.postMessage({ type: 'ready', device: 'wasm' });
     } catch (error) {
       self.postMessage({ type: 'error', error: (error as Error).message });
     }
