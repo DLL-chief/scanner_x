@@ -1,7 +1,7 @@
 // Updated with live preview and capture to ImageData
 // (assuming previous implementation)
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 interface CameraCaptureProps {
   onCapture: (blob: Blob, imageData: ImageData) => void;
@@ -10,16 +10,26 @@ interface CameraCaptureProps {
 export const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       .then(s => {
-        setStream(s);
+        if (cancelled) {
+          s.getTracks().forEach(t => t.stop());
+          return;
+        }
+        streamRef.current = s;
         if (videoRef.current) videoRef.current.srcObject = s;
-      });
+      })
+      .catch(err => console.error('Камера недоступна:', err));
 
-    return () => stream?.getTracks().forEach(track => track.stop());
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    };
   }, []);
 
   const capture = () => {
