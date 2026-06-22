@@ -46,7 +46,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({ imageBlob, onCropped
       {previewUrl && <img src={previewUrl} alt="Preview" className="max-w-full rounded" />}
       <canvas ref={canvasRef} className="hidden" />
       <button onClick={handleCrop} disabled={!previewUrl} className="bg-green-600 px-6 py-3 rounded disabled:opacity-50">
-        Обрезать и сохранить
+        Обрезать кадр
       </button>
     </div>
   );
