@@ -15,8 +15,9 @@ self.onmessage = async (event) => {
       log('Начало загрузки @xenova/transformers...');
 
       // @ts-ignore
-      const mod = await import('@xenova/transformers').catch((e: any) => {
-        throw new Error(`import('@xenova/transformers') failed: ${e?.message ?? e}`);
+      // Full URL import — bypasses importmap; URL imports are always external to Rollup
+      const mod = await import(/* @vite-ignore */ 'https://esm.sh/@xenova/transformers@2.17.2').catch((e: any) => {
+        throw new Error(`import(esm.sh/transformers) failed: ${e?.message ?? e}`);
       });
 
       log('Модуль загружен, настройка env...');
