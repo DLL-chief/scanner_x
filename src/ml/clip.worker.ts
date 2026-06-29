@@ -31,7 +31,7 @@ self.onmessage = async (event) => {
       env.backends.onnx.wasm.numThreads = 1;
 
       log('Запуск pipeline feature-extraction...');
-      model = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32', {
+      model = await pipeline('image-feature-extraction', 'Xenova/clip-vit-base-patch32', {
         quantized: false,
         progress_callback: (progress: any) => {
           self.postMessage({
