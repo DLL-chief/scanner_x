@@ -1,16 +1,10 @@
 /// <reference lib="webworker" />
 
-// Type declaration to fix TS2307 in worker
-declare module '@xenova/transformers' {
-  const pipeline: any;
-  const env: any;
-  export { pipeline, env };
-}
-
 import { pipeline, env } from '@xenova/transformers';
 
-env.allowLocalModels = false;
-env.allowRemoteModels = true;
+function log(msg: string) {
+  self.postMessage({ log: msg });
+}
 
 let model: any = null;
 
@@ -20,21 +14,34 @@ self.onmessage = async (event) => {
   if (type === 'init') {
     try {
       self.postMessage({ type: 'status', status: 'loading', progress: 0 });
-      
+      log('Настройка env...');
+
+      env.allowLocalModels = false;
+      env.allowRemoteModels = true;
+      // WASM бинарники с CDN, версия должна совпадать с onnxruntime-web из @xenova/transformers
+      env.backends.onnx.wasm.wasmPaths =
+        'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
+      // Однопоточный режим — без COOP/COEP заголовков SharedArrayBuffer недоступен
+      env.backends.onnx.wasm.numThreads = 1;
+
+      log('Запуск pipeline feature-extraction...');
       model = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32', {
         quantized: false,
         progress_callback: (progress: any) => {
-          self.postMessage({ 
-            type: 'status', 
-            status: 'loading', 
-            progress: Math.round(progress.progress || 50) 
+          self.postMessage({
+            type: 'status',
+            status: 'loading',
+            progress: Math.round(progress.progress || 50),
           });
-        }
+        },
       });
-      
+
+      log('Модель загружена успешно');
       self.postMessage({ type: 'ready', device: 'wasm' });
     } catch (error) {
-      self.postMessage({ type: 'error', error: (error as Error).message });
+      const msg = (error as Error).message ?? String(error);
+      log(`ОШИБКА init: ${msg}`);
+      self.postMessage({ type: 'error', error: msg });
     }
   } else if (type === 'vectorize' && imageData) {
     if (!model) {
@@ -46,7 +53,9 @@ self.onmessage = async (event) => {
       const embedding = Array.from(result.data);
       self.postMessage({ type: 'result', embedding });
     } catch (error) {
-      self.postMessage({ type: 'error', error: (error as Error).message });
+      const msg = (error as Error).message ?? String(error);
+      log(`ОШИБКА vectorize: ${msg}`);
+      self.postMessage({ type: 'error', error: msg });
     }
   }
 };

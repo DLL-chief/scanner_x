@@ -5,7 +5,7 @@ import { ImageCropper } from '../components/ImageCropper';
 import { CameraCapture } from '../components/CameraCapture';
 
 export default function AdminPage() {
-  const { vectorize, isReady, progress, device } = useClipWorker();
+  const { vectorize, isReady, progress, device, error: workerError, logs } = useClipWorker();
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
   const [croppedImageData, setCroppedImageData] = useState<ImageData | null>(null);
@@ -77,7 +77,20 @@ export default function AdminPage() {
     <div className="p-4 max-w-md mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Админка — Добавление карточек</h1>
       
-      {!isReady && <div className="text-blue-600">Загрузка модели... {progress}% ({device})</div>}
+      {!isReady && !workerError && (
+        <div className="text-blue-600">Загрузка модели... {progress}% ({device ?? '...'})</div>
+      )}
+      {workerError && (
+        <div className="p-3 bg-red-100 border border-red-400 rounded text-red-800 text-sm break-all">
+          <strong>Ошибка воркера:</strong> {workerError}
+        </div>
+      )}
+      {logs.length > 0 && (
+        <details className="text-xs bg-gray-100 rounded p-2">
+          <summary className="cursor-pointer font-mono text-gray-600">Лог загрузки ({logs.length})</summary>
+          <pre className="mt-2 whitespace-pre-wrap break-all">{logs.join('\n')}</pre>
+        </details>
+      )}
 
       <CameraCapture onCapture={handleCapture} />
       
