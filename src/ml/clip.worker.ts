@@ -10,6 +10,7 @@ function log(msg: string) {
 }
 
 let model: any = null;
+let rawImageCtor: any = null;
 
 self.onmessage = async (event) => {
   const { type, imageData } = event.data;
@@ -19,7 +20,8 @@ self.onmessage = async (event) => {
       self.postMessage({ type: 'status', status: 'loading', progress: 0 });
       log('Загрузка @xenova/transformers...');
 
-      const { pipeline, env } = await import(/* @vite-ignore */ TRANSFORMERS_URL) as any;
+      const { pipeline, env, RawImage } = await import(/* @vite-ignore */ TRANSFORMERS_URL) as any;
+      rawImageCtor = RawImage;
 
       log('Настройка env...');
       env.allowLocalModels = false;
@@ -55,12 +57,12 @@ self.onmessage = async (event) => {
       return;
     }
     try {
-      // RawImage.read() в transformers.js v2 принимает OffscreenCanvas, но не ImageBitmap
-      const canvas = new OffscreenCanvas(imageData.width, imageData.height);
-      const ctx = canvas.getContext('2d')!;
-      ctx.putImageData(imageData, 0, 0);
-      const result = await model(canvas, { pooling: 'mean', normalize: true });
-      const embedding = Array.from(result.data);
+      // RawImage принимает RGBA-буфер напрямую — без OffscreenCanvas/Blob/ImageBitmap.
+      // Это единственный путь без зависимости от canvas API в воркере, работает
+      // на слабых мобильниках и на WASM-ветке где OffscreenCanvas может отсутствовать.
+      const raw = new rawImageCtor(imageData.data, imageData.width, imageData.height, 4);
+      const result = await model(raw, { pooling: 'mean', normalize: true });
+      const embedding = Array.from(result.data as Float32Array);
       self.postMessage({ type: 'result', embedding });
     } catch (error) {
       const msg = (error as Error).message ?? String(error);

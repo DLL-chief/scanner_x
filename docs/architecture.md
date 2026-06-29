@@ -26,16 +26,28 @@ jsdelivr отдаёт оригинальный браузерный ESM-билд
 
 ## CLIP Worker — передача изображения в модель
 
-`pipeline()` из transformers.js принимает URL-строку, `ImageBitmap`, `OffscreenCanvas`
-или `HTMLImageElement` — но не `ImageData` напрямую (вызывает `.split()` ожидая строку).
+`RawImage.read()` в transformers.js v2 принимает ровно четыре типа входа:
+строку/URL, `Blob`, готовый экземпляр `RawImage` — всё остальное (в том числе
+`ImageData`, `ImageBitmap`, `OffscreenCanvas`) падает в `else`-ветку с
+`Unsupported input type: object`.
 
-Перед вызовом модели `ImageData` конвертируется через `createImageBitmap()`:
+Правильный путь — собрать `RawImage` напрямую из буфера `ImageData`:
 
 ```ts
-const bitmap = await createImageBitmap(imageData);
-const result = await model(bitmap, { pooling: 'mean', normalize: true });
-bitmap.close();
+const raw = new RawImage(imageData.data, imageData.width, imageData.height, 4);
+const result = await model(raw, { pooling: 'mean', normalize: true });
 ```
 
-`createImageBitmap` доступен в Web Worker и поддерживается `RawImage.read()` внутри
-transformers.js.
+`RawImage` импортируется из того же пакета рядом с `pipeline` и `env`.
+
+**Почему не Blob/OffscreenCanvas:** путь через `Blob` (`convertToBlob()`) кодирует
+кадр в PNG/JPEG, а `RawImage.read()` внутри снова его декодирует через
+`createImageBitmap` — лишний encode+decode на CPU на каждый кадр. Плюс
+`OffscreenCanvas` и `createImageBitmap` на старых/слабых мобильниках (именно
+те устройства, где нет WebGPU и активна WASM-ветка) поддержаны хуже всего.
+`RawImage` из `ImageData.data` не трогает ни один из этих API — это
+одновременно быстрее и совместимее на проблемной ветке.
+
+Ожидаемый результат: `result.data` — `Float32Array` длиной ~512 (joint
+CLIP-space для ViT-B/32). Первый успешный прогон — первая валидная карточка
+в IndexedDB.
