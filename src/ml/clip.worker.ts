@@ -55,7 +55,10 @@ self.onmessage = async (event) => {
       return;
     }
     try {
-      const result = await model(imageData, { pooling: 'mean', normalize: true });
+      // pipeline expects ImageBitmap/OffscreenCanvas/URL, not raw ImageData
+      const bitmap = await createImageBitmap(imageData);
+      const result = await model(bitmap, { pooling: 'mean', normalize: true });
+      bitmap.close();
       const embedding = Array.from(result.data);
       self.postMessage({ type: 'result', embedding });
     } catch (error) {
