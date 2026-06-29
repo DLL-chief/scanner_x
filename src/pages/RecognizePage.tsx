@@ -5,7 +5,7 @@ import { findTop5 } from '../ml/knn';
 import { storageService } from '../db/storage';
 
 export default function RecognizePage() {
-  const { isReady, isLoading, progress, device, vectorize } = useClipWorker();
+  const { isReady, isLoading, progress, device, error: workerError, logs, vectorize } = useClipWorker();
   const [results, setResults] = useState<any[]>([]);
   const [scanning, setScanning] = useState(false);
   const [liveMode, setLiveMode] = useState(false);
@@ -49,7 +49,20 @@ export default function RecognizePage() {
         </button>
       </div>
 
-      {!isReady && <div className="text-blue-600 mb-4">Загрузка модели... {progress}% ({device})</div>}
+      {!isReady && !workerError && (
+        <div className="text-blue-600 mb-4">Загрузка модели... {progress}% ({device ?? '...'})</div>
+      )}
+      {workerError && (
+        <div className="p-3 mb-4 bg-red-100 border border-red-400 rounded text-red-800 text-sm break-all">
+          <strong>Ошибка воркера:</strong> {workerError}
+        </div>
+      )}
+      {logs.length > 0 && (
+        <details className="mb-4 text-xs bg-gray-100 rounded p-2">
+          <summary className="cursor-pointer font-mono text-gray-600">Лог загрузки ({logs.length})</summary>
+          <pre className="mt-2 whitespace-pre-wrap break-all">{logs.join('\n')}</pre>
+        </details>
+      )}
       
       <CameraCapture onCapture={processFrame} />
       

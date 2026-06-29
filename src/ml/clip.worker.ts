@@ -1,5 +1,9 @@
 /// <reference lib="webworker" />
 
+function log(msg: string) {
+  self.postMessage({ log: msg });
+}
+
 let model: any = null;
 
 self.onmessage = async (event) => {
@@ -8,17 +12,23 @@ self.onmessage = async (event) => {
   if (type === 'init') {
     try {
       self.postMessage({ type: 'status', status: 'loading', progress: 0 });
+      log('Начало загрузки @xenova/transformers...');
 
-      // Dynamic import so module-load errors are catchable and reportable
       // @ts-ignore
-      const { pipeline, env } = await import('@xenova/transformers');
+      const mod = await import('@xenova/transformers').catch((e: any) => {
+        throw new Error(`import('@xenova/transformers') failed: ${e?.message ?? e}`);
+      });
+
+      log('Модуль загружен, настройка env...');
+      const { pipeline, env } = mod;
 
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
-      // Point onnxruntime to CDN so WASM files are found regardless of deploy path
+      // WASM файлы берём с CDN — иначе они не будут найдены в деплое
       env.backends.onnx.wasm.wasmPaths =
         'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
 
+      log('Запуск pipeline feature-extraction...');
       model = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32', {
         quantized: false,
         progress_callback: (progress: any) => {
@@ -30,9 +40,12 @@ self.onmessage = async (event) => {
         },
       });
 
+      log('Модель загружена успешно');
       self.postMessage({ type: 'ready', device: 'wasm' });
     } catch (error) {
-      self.postMessage({ type: 'error', error: (error as Error).message });
+      const msg = (error as Error).message ?? String(error);
+      log(`ОШИБКА init: ${msg}`);
+      self.postMessage({ type: 'error', error: msg });
     }
   } else if (type === 'vectorize' && imageData) {
     if (!model) {
@@ -44,7 +57,9 @@ self.onmessage = async (event) => {
       const embedding = Array.from(result.data);
       self.postMessage({ type: 'result', embedding });
     } catch (error) {
-      self.postMessage({ type: 'error', error: (error as Error).message });
+      const msg = (error as Error).message ?? String(error);
+      log(`ОШИБКА vectorize: ${msg}`);
+      self.postMessage({ type: 'error', error: msg });
     }
   }
 };
