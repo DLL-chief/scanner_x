@@ -55,10 +55,11 @@ self.onmessage = async (event) => {
       return;
     }
     try {
-      // pipeline expects ImageBitmap/OffscreenCanvas/URL, not raw ImageData
-      const bitmap = await createImageBitmap(imageData);
-      const result = await model(bitmap, { pooling: 'mean', normalize: true });
-      bitmap.close();
+      // RawImage.read() в transformers.js v2 принимает OffscreenCanvas, но не ImageBitmap
+      const canvas = new OffscreenCanvas(imageData.width, imageData.height);
+      const ctx = canvas.getContext('2d')!;
+      ctx.putImageData(imageData, 0, 0);
+      const result = await model(canvas, { pooling: 'mean', normalize: true });
       const embedding = Array.from(result.data);
       self.postMessage({ type: 'result', embedding });
     } catch (error) {
