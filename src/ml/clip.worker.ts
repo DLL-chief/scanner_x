@@ -1,5 +1,7 @@
 /// <reference lib="webworker" />
 
+import { pipeline, env } from '@xenova/transformers';
+
 function log(msg: string) {
   self.postMessage({ log: msg });
 }
@@ -12,22 +14,15 @@ self.onmessage = async (event) => {
   if (type === 'init') {
     try {
       self.postMessage({ type: 'status', status: 'loading', progress: 0 });
-      log('Начало загрузки @xenova/transformers...');
-
-      // @ts-ignore
-      // Full URL import — bypasses importmap; URL imports are always external to Rollup
-      const mod = await import(/* @vite-ignore */ 'https://esm.sh/@xenova/transformers@2.17.2').catch((e: any) => {
-        throw new Error(`import(esm.sh/transformers) failed: ${e?.message ?? e}`);
-      });
-
-      log('Модуль загружен, настройка env...');
-      const { pipeline, env } = mod;
+      log('Настройка env...');
 
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
-      // WASM файлы берём с CDN — иначе они не будут найдены в деплое
+      // WASM бинарники с CDN, версия должна совпадать с onnxruntime-web из @xenova/transformers
       env.backends.onnx.wasm.wasmPaths =
         'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
+      // Однопоточный режим — без COOP/COEP заголовков SharedArrayBuffer недоступен
+      env.backends.onnx.wasm.numThreads = 1;
 
       log('Запуск pipeline feature-extraction...');
       model = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32', {
