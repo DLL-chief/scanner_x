@@ -1,12 +1,6 @@
 /// <reference lib="webworker" />
 
-// Type declaration to fix TS2307 in worker
-declare module '@xenova/transformers' {
-  const pipeline: any;
-  const env: any;
-  export { pipeline, env };
-}
-
+// @ts-ignore — @xenova/transformers ships its own types after npm install
 import { pipeline, env } from '@xenova/transformers';
 
 env.allowLocalModels = false;
