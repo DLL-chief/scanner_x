@@ -1,6 +1,9 @@
 /// <reference lib="webworker" />
 
-import { pipeline, env } from '@xenova/transformers';
+// Dynamic import at runtime — static import breaks Rollup worker bundling;
+// jsdelivr serves the package's own browser ESM build (no Node path polyfills)
+const TRANSFORMERS_URL =
+  'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
 
 function log(msg: string) {
   self.postMessage({ log: msg });
@@ -14,11 +17,14 @@ self.onmessage = async (event) => {
   if (type === 'init') {
     try {
       self.postMessage({ type: 'status', status: 'loading', progress: 0 });
-      log('Настройка env...');
+      log('Загрузка @xenova/transformers...');
 
+      const { pipeline, env } = await import(/* @vite-ignore */ TRANSFORMERS_URL) as any;
+
+      log('Настройка env...');
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
-      // WASM бинарники с CDN, версия должна совпадать с onnxruntime-web из @xenova/transformers
+      // WASM бинарники с CDN, версия совпадает с onnxruntime-web из @xenova/transformers
       env.backends.onnx.wasm.wasmPaths =
         'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
       // Однопоточный режим — без COOP/COEP заголовков SharedArrayBuffer недоступен
